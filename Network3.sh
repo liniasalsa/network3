@@ -61,8 +61,8 @@ RUN wget https://network3.io/ubuntu-node-v2.1.0.tar && \\
 # Change directory
 WORKDIR /ubuntu-node
 
-# Allow port 8080
-RUN ufw allow 8080
+# Allow custom port for traffic (this will be the dynamically calculated port)
+RUN ufw allow $port_number
 
 # Start the node and provide a shell
 CMD ["bash", "-c", "bash manager.sh up; bash manager.sh key; exec bash"]
@@ -81,8 +81,9 @@ fi
 # Set the container name
 container_name="network3-docker-$instance_number"
 
-# Calculate the port number
-port_number=$((8080 + instance_number - 1))
+# Calculate the port number (now avoiding 8080 and using an alternative base port, for example, 8081)
+base_port=8081
+port_number=$((base_port + instance_number - 1))
 
 # Build the Docker image with the specified name
 docker build -t $container_name .
@@ -105,7 +106,7 @@ echo -e "${BANNER}https://account.network3.ai/main?o=$public_ip:$port_number${NC
 echo -e "${INFO}Use the key that will be displayed to link node with your email${NC}"
 
 # Run the Docker container with the necessary privileges and an interactive shell
-docker run -it --cap-add=NET_ADMIN --device /dev/net/tun --name $container_name -p $port_number:8080 $container_name
+docker run -it --cap-add=NET_ADMIN --device /dev/net/tun --name $container_name -p $port_number:$port_number $container_name
 
 echo -e "${BOLD_PINK}Join airdrop node t.me/airdrop_node on tele${RESET_COLOR}"
 echo
